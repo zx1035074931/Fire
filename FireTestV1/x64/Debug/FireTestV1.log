@@ -1,0 +1,7 @@
+﻿  Detect.cpp
+f:\大学工作\实验项目\1.rz005-可见火点自动识别\1项目完整主体\firetestv1\firetestv1\firetestv1\detect.cpp(171): warning C4101: “result”: 未引用的局部变量
+f:\大学工作\实验项目\1.rz005-可见火点自动识别\1项目完整主体\firetestv1\firetestv1\firetestv1\detect.cpp(366): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+f:\大学工作\实验项目\1.rz005-可见火点自动识别\1项目完整主体\firetestv1\firetestv1\firetestv1\detect.cpp(387): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+f:\大学工作\实验项目\1.rz005-可见火点自动识别\1项目完整主体\firetestv1\firetestv1\firetestv1\detect.cpp(400): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+  FireTestV1.vcxproj -> F:\大学工作\实验项目\1.RZ005-可见火点自动识别\1项目完整主体\FireTestV1\FireTestV1\x64\Debug\FireTestV1.exe
+  FireTestV1.vcxproj -> F:\大学工作\实验项目\1.RZ005-可见火点自动识别\1项目完整主体\FireTestV1\FireTestV1\x64\Debug\FireTestV1.pdb (Partial PDB)
