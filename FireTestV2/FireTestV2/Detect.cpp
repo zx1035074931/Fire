@@ -18,7 +18,7 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 	int s, num = 0;
 	int blur_grade = 0;//模糊度等级
 	int color_grade = 0;//色偏等级
-	Mat frame,frame1;
+	Mat frame,frame1, frame_color;
 	Mat videodst;
 	Mat picdst;
 	double ConArea, ConLength;
@@ -67,8 +67,10 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 		color_grade = colorlevel(color_std(frame));//色偏等级
 		//cout << "色偏等级为" << color_grade << endl;
 		//cout << "模糊度等级为" << blur_grade << endl;
-		picprogram(frame);
-		imshow("fire中picprogram后的frame", frame);//彩色
+		picprogram(frame); //frame彩色
+		frame_color = frame;
+		imshow("frame_color", frame_color);//彩色
+
 		videodst = picCheckColorHSV(frame);
 		imshow("picCheckColorHSV之后的的videodst", videodst);//黑白
 
