@@ -4,32 +4,87 @@
 using namespace std;
 using std::placeholders::_1;
 using std::placeholders::_2;
+static ofstream oFile;
 void draw_circle(Mat &frame)//画圈函数
 {
 	circle(frame, Point(cvRound(frame.cols / 2), cvRound(frame.rows / 2)), 50, Scalar(0, 0, 255), 2, 8);
 }
-Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
+Fire::Fire(String address, vector<vector<vector<double>>> weight)
 {
-	//---------------------------------------------------
-	int time = 1;//帧抽样间隔，单位：秒,手动1输入	 
-	//-------------------------------------------------
-	int s, num = 0;
-	int blur_grade = 0;//模糊度等级
-	int color_grade = 0;//色偏等级
-	Mat frame, frame1, frame_color;
-	Mat videodst;
-	Mat picdst;
-	double ConArea, ConLength;
-	double last_area, cur_area;
-	double last_height, cur_height;
-	double last_length, cur_length;
-	double thre = 10;//存储火焰阈值，大于该值有火焰
-	vector<int> x, y;
-	Point p;
-	weightlocal = weight;//权重数组
-	bool result;//存储当前帧是否有火焰
-				//bool stop = false;
-	VideoCapture capture(video_address);//获取当前帧
+	int picnum;
+	string address1 = address;
+	char filetype = address1.back();//利用文件后缀名判断文件类型
+
+	if (filetype == '\\')//批量图片测试
+	{
+		oFile.open("data.csv", ios::out | ios::trunc);
+		oFile << "图片编号" << "," << "区域" << "," << "红色特征参量" << "," << "圆形度" << "," << "矩形度" << "," << "边缘粗糙度" << "," << "质心高度比" << endl;
+
+		for (picnum = 1; picnum <= 20; picnum++)//从1.jpg->20.jpg 自行调节
+		{
+			///////////////////////////////////////////////批量图片测试
+			oFile << picnum << endl;
+			ostringstream dd;  //ostringstream用于字符串拼接的 输出字符串流
+			String jpg(".jpg");
+			dd << address << picnum << jpg;
+			String new_add = dd.str();
+			cout << "文件地址为：" << new_add << endl;
+			/////////////////////////////////////////////////
+
+			Mat frame;
+			Mat videodst;
+			Mat picdst;
+			vector<int> x, y;
+			Point p;
+			//int s;
+			int num = 0;
+			weightlocal = weight;//权重数组
+
+			int blur_grade = 0;//模糊度等级
+			int color_grade = 0;//色偏等级
+			bool result;//存储当前帧是否有火焰
+			double thre = 10;//存储火焰阈值，大于该值有火焰
+
+			frame = imread(new_add);
+
+			if (frame.empty())
+			{
+				cout << "路径错误或图片数量不足，已有的测试结果已保存" << endl;
+				break;
+			}
+			imshow("pic", frame);
+
+			picprogram(frame);
+			cout << endl;
+			waitKey(1000);
+			frame.release();
+		}
+		oFile.close();
+	}
+
+	else //视频测试
+	{
+		//---------------------------------------------------
+		int time = 1;//帧抽样间隔，单位：秒,手动1输入	 
+					 //-------------------------------------------------
+		int s, num = 0;
+		int blur_grade = 0;//模糊度等级
+		int color_grade = 0;//色偏等级
+		Mat frame, frame1, frame_color;
+		Mat videodst;
+		Mat picdst;
+		double ConArea, ConLength;
+		double last_area, cur_area;
+		double last_height, cur_height;
+		double last_length, cur_length;
+		double thre = 10;//存储火焰阈值，大于该值有火焰
+		vector<int> x, y;
+		Point p;
+		weightlocal = weight;//权重数组
+		bool result;//存储当前帧是否有火焰
+
+
+	VideoCapture capture(address);//获取当前帧
 	if (!capture.isOpened())
 		cout << "视频无法继续读取" << endl;
 	//double totalFrameNumber = capture.get(CV_CAP_PROP_FRAME_COUNT);//获取总帧数
@@ -129,6 +184,7 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 	}
 	capture.release();
 	return;
+	}
 }
 //Fire::~Fire(){}
 //图像预处理
