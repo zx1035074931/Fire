@@ -11,7 +11,24 @@ void draw_circle(Mat &frame)//画圈函数
 }
 Fire::Fire(String address, vector<vector<vector<double>>> weight)
 {
-	int picnum;
+	//---------------------------------------------------
+	int time = 1;//帧抽样间隔，单位：秒,手动1输入	 
+	//-------------------------------------------------
+	int s, num = 0, picnum;
+	int blur_grade = 0;//模糊度等级
+	int color_grade = 0;//色偏等级
+	Mat frame, frame1, frame_color;
+	Mat videodst;
+	Mat picdst;
+	double ConArea, ConLength;
+	double last_area, cur_area;
+	double last_height, cur_height;
+	double last_length, cur_length;
+	double thre = 10;//存储火焰阈值，大于该值有火焰
+	vector<int> x, y;
+	Point p;
+	weightlocal = weight;//权重数组
+	bool result;//存储当前帧是否有火焰
 	string address1 = address;
 	char filetype = address1.back();//利用文件后缀名判断文件类型
 
@@ -20,7 +37,7 @@ Fire::Fire(String address, vector<vector<vector<double>>> weight)
 		oFile.open("data.csv", ios::out | ios::trunc);
 		oFile << "图片编号" << "," << "区域" << "," << "红色特征参量" << "," << "圆形度" << "," << "矩形度" << "," << "边缘粗糙度" << "," << "质心高度比" << endl;
 
-		for (picnum = 1; picnum <= 20; picnum++)//从1.jpg->20.jpg 自行调节
+		for (picnum = 1; ; picnum++)
 		{
 			///////////////////////////////////////////////批量图片测试
 			oFile << picnum << endl;
@@ -30,26 +47,11 @@ Fire::Fire(String address, vector<vector<vector<double>>> weight)
 			String new_add = dd.str();
 			cout << "文件地址为：" << new_add << endl;
 			/////////////////////////////////////////////////
-
-			Mat frame;
-			Mat videodst;
-			Mat picdst;
-			vector<int> x, y;
-			Point p;
-			//int s;
-			int num = 0;
-			weightlocal = weight;//权重数组
-
-			int blur_grade = 0;//模糊度等级
-			int color_grade = 0;//色偏等级
-			bool result;//存储当前帧是否有火焰
-			double thre = 10;//存储火焰阈值，大于该值有火焰
-
 			frame = imread(new_add);
 
 			if (frame.empty())
 			{
-				cout << "路径错误或图片数量不足，已有的测试结果已保存" << endl;
+				cout << "已测试完所有图片，已有的测试结果已保存" << endl;
 				break;
 			}
 			imshow("pic", frame);
@@ -64,32 +66,12 @@ Fire::Fire(String address, vector<vector<vector<double>>> weight)
 
 	else //视频测试
 	{
-		//---------------------------------------------------
-		int time = 1;//帧抽样间隔，单位：秒,手动1输入	 
-					 //-------------------------------------------------
-		int s, num = 0;
-		int blur_grade = 0;//模糊度等级
-		int color_grade = 0;//色偏等级
-		Mat frame, frame1, frame_color;
-		Mat videodst;
-		Mat picdst;
-		double ConArea, ConLength;
-		double last_area, cur_area;
-		double last_height, cur_height;
-		double last_length, cur_length;
-		double thre = 10;//存储火焰阈值，大于该值有火焰
-		vector<int> x, y;
-		Point p;
-		weightlocal = weight;//权重数组
-		bool result;//存储当前帧是否有火焰
-
-
 	VideoCapture capture(address);//获取当前帧
 	if (!capture.isOpened())
 		cout << "视频无法继续读取" << endl;
 	//double totalFrameNumber = capture.get(CV_CAP_PROP_FRAME_COUNT);//获取总帧数
 	double rate = capture.get(CV_CAP_PROP_FPS);//获取帧率
-											   //cout << "总帧为:" << totalFrameNumber << endl;
+	//cout << "总帧为:" << totalFrameNumber << endl;
 	cout << "帧率为:" << rate << endl;
 	cout << "帧抽样周期为:" << time << "s" << endl;
 	while (1)
