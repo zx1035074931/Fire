@@ -9,7 +9,6 @@ using namespace cv;
 using namespace std;
 using std::placeholders::_1;
 using std::placeholders::_2;
-
 /*-------------------模糊度测试-------------------
 --------------------------------------------------
 计算相邻像素之间差值的变化,如果待测图像相邻像素之间的差值
@@ -22,7 +21,6 @@ double Fire::G_reblur(Mat src)
 	Mat mat_c;
 	// 只有32FC1, 32FC2, 64FC1, 64FC2才支持乘法
 	in.convertTo(mat_c, CV_64F, 1.0, 0);
-
 	//横向的滤波结果
 	Mat h = conv(mat_c);
 	/*for (int a = 79; a < 84; a++)
@@ -48,7 +46,6 @@ double Fire::G_reblur(Mat src)
 	Sobel(mat_c, grad_y, CV_64F, 0, 1, 3, 1, 0, BORDER_DEFAULT);
 	convertScaleAbs(grad_y, abs_grad_y);
 	addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad);
-
 	//计算并获取图像中所有大小为side*side,步长为step的区域的方差和位置，存于vector roi 中
 	int side = 8;
 	int	step = 4;
@@ -79,7 +76,6 @@ double Fire::G_reblur(Mat src)
 	int n = 64;
 	double blur_reb[64];
 	double blur_greb = 0;
-
 	Mat f, b_ver, b_hor;//f代表原始图像，b代表滤波后的图像
 	Mat d_fver(side - 1, side - 1, CV_64F);
 	Mat d_bver(side - 1, side - 1, CV_64F);
@@ -91,16 +87,13 @@ double Fire::G_reblur(Mat src)
 	{
 		double r1 = roi[i2].i;
 		double c1 = roi[i2].j;
-
 		f = mat_c(Rect(c1, r1, side, side));
 		b_ver = h(Rect(c1, r1, side, side));//h为横向滤波结果
 		b_hor = z(Rect(c1, r1, side, side));//z为纵向滤波结果
-
 		double s_fver = 0.0;
 		double s_vver = 0.0;
 		double s_fhor = 0.0;
 		double s_vhor = 0.0;
-
 		for (int i3 = 0; i3 < side - 1; i3++)
 		{
 			for (int j3 = 0; j3 < side - 1; j3++)
@@ -108,20 +101,16 @@ double Fire::G_reblur(Mat src)
 				d_fver.at<double >(i3, j3) = abs(f.at<double >(i3, j3 + 1) - f.at<double >(i3, j3));
 				//printf("%d", d_fver.at<uchar>(i3, j3));
 				d_bver.at<double >(i3, j3) = abs(b_ver.at<double >(i3, j3 + 1) - b_ver.at<double >(i3, j3));
-
 				d_fhor.at<double >(i3, j3) = abs(f.at<double >(i3 + 1, j3) - f.at<double >(i3, j3));
 				d_bhor.at<double >(i3, j3) = abs(b_hor.at<double >(i3 + 1, j3) - b_hor.at<double >(i3, j3));
-
 				d_vver.at<double >(i3, j3) = (d_fver.at<double >(i3, j3) - d_bver.at<double>(i3, j3) > 0) ? (d_fver.at<double>(i3, j3) - d_bver.at<double>(i3, j3)) : 0;
 				d_vhor.at<double >(i3, j3) = (d_fhor.at<double >(i3, j3) - d_bhor.at<double>(i3, j3) > 0) ? (d_fhor.at<double>(i3, j3) - d_bhor.at<double>(i3, j3)) : 0;
-
 				s_fver += d_fver.at<double>(i3, j3);
 				s_vver += d_vver.at<double>(i3, j3);
 				s_fhor += d_fhor.at<double>(i3, j3);
 				s_vhor += d_vhor.at<double>(i3, j3);
 			}
 		}
-
 		if ((s_fver == 0) || (s_fhor == 0))
 		{
 			blur_reb[i2] = 0;
@@ -132,7 +121,6 @@ double Fire::G_reblur(Mat src)
 			double b_fver = double(s_fver - s_vver) / s_fver;
 			double b_fhor = double(s_fhor - s_vhor) / s_fhor;
 			double tep = (b_fver > b_fhor) ? b_fver : b_fhor;
-
 			blur_reb[i2] = 1 - tep;
 			//cout << "blur_reb[i2] is:"<<blur_reb[i2] << endl;
 		}
@@ -144,7 +132,6 @@ double Fire::G_reblur(Mat src)
 	cout << "模糊度" << blur_greb << endl;
 	return blur_greb;
 }
-
 /*-------------------色偏测试--------------------
 ------------------------------------------------*/
 double Fire::color_std(Mat &img)
@@ -157,7 +144,6 @@ double Fire::color_std(Mat &img)
 	h = HSV[0];
 	s = HSV[1];
 	i = HSV[2];
-
 	h = 255 * h / 180;    //将h结果转换为matlab那边所表示的h通道结果
 						  //绘制src直方图
 	Mat dstHist;  //定义存储直方图变量
@@ -167,7 +153,6 @@ double Fire::color_std(Mat &img)
 	int bins = 256;
 	int channels = 0;
 	calcHist(&h, 1, &channels, Mat(), dstHist, dims, &bins, ranges);
-
 	Mat drawImage = Mat::zeros(Size(256, 256), CV_8UC3);
 	float hh[256];
 	for (int i = 0; i < 256; i++)
@@ -189,13 +174,11 @@ double Fire::color_std(Mat &img)
 	}
 	double std = spow / 256;   //matlab对应为n-1
 	double stdstd = sqrt(std);    //开方求标准差
-
 	Scalar mean;
 	Scalar stddev;
 	meanStdDev(h, mean, stddev);
 	double mean_pxl = mean.val[0];
 	double stddev_pxl = stddev.val[0];
-
 	Mat zeroMatrix = Mat::zeros(h.size(), CV_8UC1);
 	MatND zeroM_hist;
 	calcHist(&zeroMatrix, 1, &channels, Mat(), zeroM_hist, dims, &bins, ranges);
@@ -219,9 +202,7 @@ double Fire::color_std(Mat &img)
 	}
 	double std2 = spow2 / 256;
 	double stdstd2 = sqrt(std2);  //开方求标准差
-
 	double rate1 = 1 - stdstd / stdstd2;
-
 	Mat zeroMatrix2 = Mat::zeros(h.size(), CV_8UC1);
 	double num = 0;
 	for (int i3 = 0; i3 < img.rows; i3++)
@@ -240,10 +221,8 @@ double Fire::color_std(Mat &img)
 	meanStdDev(zeroMatrix2, mean1, stddev1);
 	double mean_px2 = mean1.val[0];
 	double stddev_px2 = stddev1.val[0];
-
 	double stddev_pxlf = stddev_pxl;
 	double stddev_px2f = stddev_px2;
-
 	double rate2 = stddev_pxlf / stddev_px2f;
 	if (rate2 > 1)
 	{
@@ -272,7 +251,6 @@ int Fire::blurlevel(double blur_mos)
 int Fire::colorlevel(double color_mos)
 {//色偏等级
 	int color_level;
-
 	if ((0 <= color_mos) && (color_mos<0.2))
 		color_level = 1;
 	else if ((0.2 <= color_mos) && (color_mos<0.4))

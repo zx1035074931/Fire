@@ -4,12 +4,10 @@
 using namespace std;
 using std::placeholders::_1;
 using std::placeholders::_2;
-
 void draw_circle(Mat &frame)//画圈函数
 {
 	circle(frame, Point(cvRound(frame.cols / 2), cvRound(frame.rows / 2)), 50, Scalar(0, 0, 255), 2, 8);
 }
-
 Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 {
 	//---------------------------------------------------
@@ -18,30 +16,27 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 	int s, num = 0;
 	int blur_grade = 0;//模糊度等级
 	int color_grade = 0;//色偏等级
-	Mat frame,frame1, frame_color;
+	Mat frame, frame1, frame_color;
 	Mat videodst;
 	Mat picdst;
 	double ConArea, ConLength;
-	double last_area,cur_area;
-	double last_height,cur_height;
-	double last_length,cur_length;
+	double last_area, cur_area;
+	double last_height, cur_height;
+	double last_length, cur_length;
 	double thre = 10;//存储火焰阈值，大于该值有火焰
 	vector<int> x, y;
 	Point p;
 	weightlocal = weight;//权重数组
 	bool result;//存储当前帧是否有火焰
-	//bool stop = false;
-
+				//bool stop = false;
 	VideoCapture capture(video_address);//获取当前帧
 	if (!capture.isOpened())
 		cout << "视频无法继续读取" << endl;
-
 	//double totalFrameNumber = capture.get(CV_CAP_PROP_FRAME_COUNT);//获取总帧数
 	double rate = capture.get(CV_CAP_PROP_FPS);//获取帧率
-	//cout << "总帧为:" << totalFrameNumber << endl;
+											   //cout << "总帧为:" << totalFrameNumber << endl;
 	cout << "帧率为:" << rate << endl;
 	cout << "帧抽样周期为:" << time << "s" << endl;
-
 	while (1)
 	{
 		num++;
@@ -50,41 +45,33 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 			cout << "未能继续读取视频" << endl;
 			break;
 		}
-
 		if (num % cvRound(time*rate) == 0)//实现帧抽样的核心语句
 			frame = frame1.clone();
 		else
 			continue;
-
 		cur_area = 0;
 		cur_length = 0;
 		cur_height = 0;
 		draw_circle(frame);
-		imshow("Frame", frame);
+		imshow("视频原图", frame);
 		cout << "正在读取第" << num << "帧" << endl;
-
 		blur_grade = blurlevel(G_reblur(frame));//模糊度等级
 		color_grade = colorlevel(color_std(frame));//色偏等级
-		//cout << "色偏等级为" << color_grade << endl;
-		//cout << "模糊度等级为" << blur_grade << endl;
+												   //cout << "色偏等级为" << color_grade << endl;
+												   //cout << "模糊度等级为" << blur_grade << endl;
 		picprogram(frame); //frame彩色
 		frame_color = frame;
-		imshow("frame_color", frame_color);//彩色
-
+		imshow("疑似火焰区域", frame_color);//彩色
 		videodst = picCheckColorHSV(frame);
-		imshow("picCheckColorHSV之后的的videodst", videodst);//黑白
-
-		//videodst = fireHSV;//同用一张火焰疑似区域
-
+		//imshow("picCheckColorHSV之后的的videodst", videodst);//黑白
+														 //videodst = fireHSV;//同用一张火焰疑似区域
 		fillHole(videodst, videodst);//虫洞填充
 		Mat element = getStructuringElement(MORPH_RECT, Size(7, 7));
 		//进行形态学操作  
 		morphologyEx(videodst, videodst, MORPH_CLOSE, element);
 		fillHole(videodst, videodst);
-
 		vector<vector<Point>> contours;
 		findContours(videodst, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);//寻找边缘
-
 		for (int i = 0; i < (int)contours.size(); i++)
 		{
 			ConArea = contourArea(contours[i], false);//contourArea检测轮廓中的面积
@@ -114,7 +101,7 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 		else if (date[0] == 0)
 		{
 			cout << "当前帧不存在火焰" << endl;
-			num +=1;
+			num += 1;
 			frame.release();
 			continue;
 		}
@@ -136,22 +123,14 @@ Fire::Fire(String video_address, vector<vector<vector<double>>> weight)
 			cout << "当前帧存在火焰" << endl;
 		else
 			cout << "当前帧不存在火焰" << endl;
-
 		x.clear();
 		y.clear();
-		//if (cv::waitKey(100) >= 0)
-		//break;
-		//如果要imshow，取消这两行注释
-		//frame.release();
 		cout << endl;
 	}
 	capture.release();
-	//cv::destroyAllWindows();
-	//waitKey(0);
 	return;
 }
 //Fire::~Fire(){}
-
 //图像预处理
 void Fire::picprogram(Mat pic)
 {
@@ -159,7 +138,7 @@ void Fire::picprogram(Mat pic)
 	Mat oriImg = pic;
 	//imshow("oriImg", oriImg);
 	fireHSV = picCheckColorHSV(oriImg);//疑似火焰区域
-	//imshow("fireHSV", fireHSV);
+									   //imshow("fireHSV", fireHSV);
 	fillHole(fireHSV, fireHSV);
 	//imshow("fireHSV", fireHSV);
 	date[0] = R_t(oriImg, fireHSV);
@@ -195,10 +174,45 @@ void Fire::picprogram(Mat pic)
 		cout << "区域质心高度比为" << date[4] << endl;
 	}
 }
+void Fire::AreaExtract(Mat inImg)
+{//火焰区域提取
+	Mat imgHSV, inclone;
+	cvtColor(inImg, imgHSV, COLOR_BGR2HSV);//cvtcolor():颜色空间转换函数
+	imshow("HSV的结果", imgHSV);
+	inclone = inImg;
+	//split(imgHSV, HSVchannels);
+	int H, S, V, R, G, B;
+
+	for (int i = 0; i < inImg.rows; i++)
+	{
+		for (int j = 0; j < inImg.cols; j++)
+		{
+
+			H = imgHSV.at<Vec3b>(i, j)[0];
+			S = imgHSV.at<Vec3b>(i, j)[1];
+			V = imgHSV.at<Vec3b>(i, j)[2];
+			B = inImg.at<Vec3b>(i, j)[0];
+			G = inImg.at<Vec3b>(i, j)[1];
+			R = inImg.at<Vec3b>(i, j)[2];
+
+			//if (H > 15 && H < 100 && S>20 && S <= 150 && V>100 && V <= 255)
+			if (((H >= 0 && H < 34) || (H >= 156 && H < 180)) && S>43 && S <= 255 && V>46 && V <= 255)
+			{
+				//continue;
+				inImg.at<Vec3b>(i, j) = 255;//at: 取出图像中i行j列的点,此句将疑似火焰区域变为白色
+			}
+
+			else
+				//continue;
+				inImg.at<Vec3b>(i, j) = 0;// (R + G + B) / 3; //at: 取出图像中i行j列的点,此句将非疑似火焰区域变为黑色
+		}
+	}
+	imshow("picCheckColorHSV的结果", inImg);
+}
 
 Mat Fire::picCheckColorHSV(Mat &inImg)
 {//火焰区域提取
-	Mat fireImg,imgHSV, multiHSV[3], multiRGB[3];
+	Mat fireImg, imgHSV, multiHSV[3], multiRGB[3];
 	//creat:创建一个指定大小(Size)，指定类型type(CV_8UC1, CV_16SC1, CV_32FC3)的图像矩阵的矩阵体,Mat只创建了矩阵头
 	fireImg.create(inImg.size(), CV_8UC1);
 	imgHSV.create(inImg.size(), CV_8UC1);
@@ -207,23 +221,21 @@ Mat Fire::picCheckColorHSV(Mat &inImg)
 	int a = imgHSV.channels();
 	split(inImg, multiRGB);
 	split(imgHSV, multiHSV);
-
 	uchar *p0, *p1, *p2, *q0, *q1, *q2;
 	for (int i = 0; i < inImg.rows; i++)
 	{
 		q0 = multiRGB[0].ptr<uchar>(i);//B
 		q1 = multiRGB[1].ptr<uchar>(i);//G
 		q2 = multiRGB[2].ptr<uchar>(i);//R
-
 		p0 = multiHSV[0].ptr<uchar>(i);//H
 		p1 = multiHSV[1].ptr<uchar>(i);//S
 		p2 = multiHSV[2].ptr<uchar>(i);//V
-
 		for (int j = 0; j < inImg.cols; j++)
 		{
 			float H = p0[j], S = p1[j], V = p2[j];
 			float B = q0[j], G = q1[j], R = q2[j];
-			if (H > 15 && H < 100 && S>20 && S <= 150 && V>100 && V <= 255)
+			//if (H > 15 && H < 100 && S>20 && S <= 150 && V>100 && V <= 255)
+			if (((H >= 0 && H < 34) || (H >= 156 && H < 180)) && S>120 && S <= 255 && V>46 && V <= 255)
 				continue;
 			//fireImg.at<uchar>(i, j) = 255;//at: 取出图像中i行j列的点,此句将疑似火焰区域变为白色
 			else
@@ -233,7 +245,6 @@ Mat Fire::picCheckColorHSV(Mat &inImg)
 	multiRGB[0].release();
 	multiRGB[1].release();
 	multiRGB[2].release();
-
 	multiHSV[0].release();
 	multiHSV[1].release();
 	multiHSV[2].release();
@@ -253,11 +264,9 @@ Mat Fire::picCheckColorHSV(Mat &inImg)
 			contours2.push_back(contours[i]); //push_back:在vector类中作用为在vector尾部加入一个数据
 	}
 	drawContours(fireImg, contours2, -1, Scalar(0), CV_FILLED);//画轮廓
-	imshow("picCheckColorHSV的结果", fireImg);
-		
+	//imshow("picCheckColorHSV的结果", fireImg);
 	return fireImg;
 }
-
 void Fire::fillHole(const cv::Mat srcimage, cv::Mat & dstimage)
 {
 	Size m_Size = srcimage.size();
@@ -268,7 +277,6 @@ void Fire::fillHole(const cv::Mat srcimage, cv::Mat & dstimage)
 	temimage(Range(1, m_Size.height + 1), Range(1, m_Size.width + 1)).copyTo(cutImg);
 	dstimage = srcimage | (~cutImg);
 }
-
 //八大特征
 float Fire::R_t(Mat fst, Mat dst)//红色分量
 {
@@ -277,8 +285,7 @@ float Fire::R_t(Mat fst, Mat dst)//红色分量
 	int counter = countNonZero(dst); //对二值化图像执行countNonZero,可得非零像素点数.
 	if (counter == 0)
 		return 0;
-	uchar *p,*p0,*p1,*p2;
-
+	uchar *p, *p0, *p1, *p2;
 	for (int i = 0; i < fst.rows; i++)
 	{
 		p = dst.ptr<uchar>(i);
@@ -289,11 +296,7 @@ float Fire::R_t(Mat fst, Mat dst)//红色分量
 		}
 	}
 	float B = 0, G = 0, R = 0;
-
 	split(fst, multiRGB); //将图片拆分成R,G,B,三通道的颜色  
-						  //cout << "b是否连续" << multiRGB[0].isContinuous() << endl;
-						  //cout << "g是否连续" << multiRGB[1].isContinuous() << endl;
-						  //cout << "r是否连续" << multiRGB[2].isContinuous() << endl;
 	for (int i = 0; i < fst.rows; i++)
 	{
 		p0 = multiRGB[0].ptr<uchar>(i);//B  V
@@ -301,7 +304,6 @@ float Fire::R_t(Mat fst, Mat dst)//红色分量
 		p2 = multiRGB[2].ptr<uchar>(i);//R 越接近红色的地方在红色通道越接近白色  H
 		for (int j = 0; j < fst.cols; j++)
 		{
-
 			B = B + p0[j]; //计算区域内像素R,G,B总和
 			G = G + p1[j];
 			R = R + p2[j];
@@ -327,7 +329,6 @@ float Fire::R_t(Mat fst, Mat dst)//红色分量
 	else
 		return 0;
 }
-
 float Fire::Rec(vector<Point> contour)//矩形度
 {
 	int area = contourArea(contour);
@@ -337,14 +338,12 @@ float Fire::Rec(vector<Point> contour)//矩形度
 	float rec = area / rectarea;
 	return rec;
 }
-
 double Fire::Factor(vector<Point> contour)//圆形度
 {
 	double factor = (contourArea(contour) * 4 * CV_PI) /
 		(pow(arcLength(contour, true), 2));
 	return factor;
 }
-
 float Fire::Cen_hei(vector<Point> contour)//物体的质心高度比
 {
 	Point p;
@@ -356,9 +355,7 @@ float Fire::Cen_hei(vector<Point> contour)//物体的质心高度比
 		for (int i = 0; i < s; i++)
 		{
 			p = contour.at(i);
-
 			x.push_back(p.x);
-
 			y.push_back(p.y);
 		}
 	}
@@ -373,22 +370,18 @@ float Fire::Cen_hei(vector<Point> contour)//物体的质心高度比
 	float ratio_ch = (*buttom - cen) / height;
 	return ratio_ch;
 }
-
 double Fire::Rou(vector<Point> contour) // 边缘粗糙度
 {
 	vector<Point> hull;
 	convexHull(Mat(contour), hull, false);
-
 	double hullLength, dstLength, hullsize;
 	hullLength = arcLength(hull, false);
 	hullsize = contourArea(hull, false);
 	dstLength = arcLength(contour, false);
 	double roughness;
 	roughness = dstLength / hullLength;
-
 	return roughness;
 }
-
 double Fire::change_dy(double para1, double para2)//面积变化率，边缘抖动变化率，高度变化率
 {
 	double para3 = abs(para1 - para2);
@@ -396,7 +389,6 @@ double Fire::change_dy(double para1, double para2)//面积变化率，边缘抖动变化率，
 	double para_dy = para3 / max_para;
 	return para_dy;
 }
-
 bool Fire::getresult(int color_grade, int blur_grade, double th)
 {//最终判断
 	double result = 0;
@@ -409,11 +401,9 @@ bool Fire::getresult(int color_grade, int blur_grade, double th)
 	else
 		return false;
 }
-
 Mat Fire::conv(Mat & in)
 {
 	Mat out = cv::Mat::zeros(in.rows, in.cols, CV_64FC1);
-
 	Mat temp = cv::Mat::zeros(in.rows + 8, in.cols + 8, CV_64FC1);
 	Mat temp2 = cv::Mat::zeros(in.rows + 8, in.cols + 8, CV_64FC1);
 	for (int i = 4; i < (in.rows + 4); i++)//移位
@@ -423,9 +413,7 @@ Mat Fire::conv(Mat & in)
 			temp.at<double>(i, j) = in.at<double>(i - 4, j - 4);
 		}
 	}
-
 	double avg = 0;
-
 	for (int i1 = 4; i1 < (in.rows + 4); i1++)//卷积
 	{
 		for (int j1 = 4; j1 < (in.cols + 4); j1++)
@@ -438,7 +426,6 @@ Mat Fire::conv(Mat & in)
 			avg = 0;
 		}
 	}
-
 	for (int i = 4; i < (in.rows + 4); i++)//回移
 	{
 		for (int j = 4; j < (in.cols + 4); j++)
@@ -454,7 +441,6 @@ struct post
 	int i;
 	int j;
 };
-
 bool Fire::comp(const post & a, const post & b)
 {
 	return a.std > b.std;
