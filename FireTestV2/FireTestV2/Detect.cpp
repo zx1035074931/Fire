@@ -213,7 +213,7 @@ void Fire::picprogram(Mat pic)
 	}
 }
 void Fire::AreaExtract(Mat inImg)
-{//火焰区域提取
+{//火焰区域提取，未启用
 	Mat imgHSV, inclone;
 	cvtColor(inImg, imgHSV, COLOR_BGR2HSV);//cvtcolor():颜色空间转换函数
 	imshow("HSV的结果", imgHSV);
